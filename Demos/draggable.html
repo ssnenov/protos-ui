@@ -1,0 +1,17 @@
+<script src="../jquery.js" type="text/javascript"></script>
+<!--<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script> -->
+    <script src="../jquery.protos-ui.js" type="text/javascript"></script>
+    <link href="../protos-ui.css" rel="stylesheet" />
+	
+<div id="container" style="width: 300px; height: 300px; background-color: grey; margin: 20px 20px 20px 20px; padding: 15px;">
+    <div id="test" style="position: absolute; background-color: red; height: 100px; width: 100px;">
+		<div style=""></div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    $("#test").protos().draggable({
+        container: "#container",
+    });
+</script>
