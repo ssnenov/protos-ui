@@ -1,0 +1,26 @@
+<script src="../jquery.js" type="text/javascript"></script>
+<!--<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script> -->
+    <script src="../jquery.protos-ui.js" type="text/javascript"></script>
+    <link href="../protos-ui.css" rel="stylesheet" />
+	
+	See the console :)
+
+
+<script type="text/javascript">
+var foo = function(){
+	var deferred = new protos.deferred();
+	setTimeout(function(){ 
+		deferred.resolve();
+	}, 2000);
+	
+	return deferred;
+};
+
+foo().done(function(){ 
+	console.log('foo is done [first message]!'); 
+}).done(function(){ 
+	console.log('foo is done [second message]!'); 
+}).fail(function(){ 
+	console.log('foo is fail!'); 
+});;
+</script>
