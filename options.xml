@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Options>
+	<SourceCodeDir>D:\IT\protos-ui\master</SourceCodeDir>
+	<CoreJsPath>D:\IT\protos-ui\master\src\core.js</CoreJsPath>
+	<DefaultFileName>jquery.protos-ui.js</DefaultFileName>
+	<DefaultMinifiedFileName>jquery.protos-ui.min.js</DefaultMinifiedFileName>
+	<OptimizationLevel></OptimizationLevel>
+	<MinifyAfterMerge>false</MinifyAfterMerge>
+	<FenceTheScope>
+	(function($, document, hashTag) {
+		@codeHere
+	})(jQuery, document, '#');
+	</FenceTheScope>
+</Options>
