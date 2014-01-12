@@ -5,6 +5,7 @@ protos.spa = function(options) {
 	that.routes = that.options.routes;
 
 	that.startRouting = function() {
+		hashChanged(window.location.hash);
 		if ("onhashchange" in window) { // event supported?
 			window.onhashchange = function() {
 				hashChanged(window.location.hash);

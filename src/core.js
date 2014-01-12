@@ -34,7 +34,7 @@ $.fn.protos = function() { //Attach protos object to jQery object
 			return createInstance(options, that, widgets.draggable, "draggable");
 		},
 		spa: function(options) {
-			return createInstance(options, that, widgets.spa, "spa");
+			return createInstance(options, that, protos.spa, "spa");
 		},
 		imageGallery: function(options) {
 			return createInstance(options, that, widgets.imageGallery, 'imageGallery');
