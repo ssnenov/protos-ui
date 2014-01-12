@@ -1099,7 +1099,7 @@ protos.scrollTo = function(options) {
 	
 	return author;
 };
-widgets.spa = function(options) {
+protos.spa = function(options) {
 	var that = this;
 	that.options = $.extend({}, options),
 	that.layout = that.options.author,
