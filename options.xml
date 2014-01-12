@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Options>
-	<SourceCodeDir>D:\IT\protos-ui\master</SourceCodeDir>
+	<SourceCodeDir>D:\IT\protos-ui\master\src</SourceCodeDir>
 	<CoreJsPath>D:\IT\protos-ui\master\src\core.js</CoreJsPath>
 	<DefaultFileName>jquery.protos-ui.js</DefaultFileName>
 	<DefaultMinifiedFileName>jquery.protos-ui.min.js</DefaultMinifiedFileName>
