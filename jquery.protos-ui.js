@@ -1269,7 +1269,7 @@ widgets.alertPopUp = function(options) {
 
 	options = $.extend(defaultOptions, options);
 	
-	options.content += protos.generateHtml('div', [], protos.generateHtml('button', ['protosOKbutton'], 'Ok', false), false, { style: 'padding-top: 15px; text-align: center;'});
+	options.content += protos.generateHTML('div', [], protos.generateHTML('button', ['protosOKbutton'], 'Ok', false), false, { style: 'padding-top: 15px; text-align: center;'});
 
 	var defaultPopUp = new widgets.popUpCore(options);
 	var dataObject = options.author[0];
