@@ -422,7 +422,11 @@ protos.dataSource = function(options) {
 		query.filters = [];
 		for(var i in that.filters)
 		{
-			query.filters.push(that.filters[i]);
+			var filter = that.filters[i];
+			if(typeof(filter) !== typeof(function(){}))
+			{
+				query.filters.push(filter);
+			}
 		}
 				
 		var deferred = new protos.deferred();
