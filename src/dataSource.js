@@ -1,6 +1,6 @@
 protos.dataSource = function(options) {
 	var that = this,
-		_items;
+		_items; // lastly readed dataItems
 	
 	that.items = function() { return _items; };
 	
@@ -37,7 +37,7 @@ protos.dataSource = function(options) {
 		for(var i in that.filters)
 		{
 			var filter = that.filters[i];
-			if(typeof(filter) !== typeof(function(){}))
+			if(typeof(filter) !== 'function')
 			{
 				query.filters.push(filter);
 			}
@@ -71,7 +71,7 @@ protos.dataSource = function(options) {
 	that.readed = function(dataItems) {
 		var data = {},
 			disableReadData;
-		if(!dataItems.length) { //If the data is not array => the options.read method used server paging & filtering
+		if(!dataItems.length) { //If the data is not array => the options.read method was used server paging & filtering
 			_items = dataItems.items;
 			data = dataItems.data;
 			disableReadData = true;
@@ -195,19 +195,12 @@ protos.dataSource = function(options) {
 	})();
 	
 	that.findItem = function(guid) {
-		var originalData = that.originalData;
-		for(var i = 0; i < _items; i++ )
-		{
-			if(originalData[i].uid === guid)
-			{
-				return originalData[i];
-			}
-		}
+		return that._data.first(function(dataItem) { return dataItem.uid == guid }); // Not sure that._data  or _items
 	};
 	
 	that.getPageData = function (page, itemsPerPage, disableReadData) {
 		var deferred = new protos.deferred();
-		
+
 		if(!disableReadData && that.originalData.read) {
 			that.read(page - 1, itemsPerPage)
 				.done(function() {
