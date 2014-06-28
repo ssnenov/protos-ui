@@ -3,7 +3,7 @@
     <script src="../jquery.protos-ui.js" type="text/javascript"></script>
     <link href="../protos-ui.css" rel="stylesheet" />
 
-<div id="element1" style="border: solid black 1px; width: 400px;">
+<div id="element1" style="border: solid black 1px; width: 200px;">
 </div>
 
 <script id="galleryTemplate" type="protos-tmpl">
@@ -14,8 +14,8 @@
 	var dataSource = new protos.dataSource({
 		data: {
 			//read: 'http://demos.kendoui.com/service/Products'
-			read: function(query) {
-				$.ajax({
+ 			read: function(query, deferred) {
+				/*$.ajax({
 					type: 'json',
 					contentType: "application/json; charset=utf-8",
 					type: "GET",
@@ -29,12 +29,22 @@
 						
 						dataSource.readed(data);
 					}
-				});
+				});*/
+
+				deferred.resolve([
+				{ ProductID: "test", ProductName: "test name"},
+				{ ProductID: "2test", ProductName: "test name"},
+				{ ProductID: "test beer", ProductName: "test name"},
+				{ ProductID: "Truck", ProductName: "test name"},
+				{ ProductID: "Beer", ProductName: "test name"},
+				{ ProductID: "6test", ProductName: "test name"},
+				{ ProductID: "Car", ProductName: "test name"},
+				]);
 			}
 		},
 		server: {
 			paging: false,
-		//	filtering: true,
+			filtering: false,
 		//	sorting: true
 		}
 	});
@@ -43,7 +53,7 @@
 
 	$("#element1").protos().listView({
 		data: dataSource,
-		pageSize: 15,
+		pageSize: 3,
 		templateId: 'galleryTemplate'
 	});
 </script>

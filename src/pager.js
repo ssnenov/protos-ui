@@ -15,7 +15,7 @@ widgets.pager = function(options){
 	{
 		if(container)
 		{
-			var countOfDataItems = options.dataSource.items(),
+			var countOfDataItems = options.dataSource.itemsCount(),
 				pageSize = options.pageSize,
 				html = '',
 				nextPrevButtons = options.nextPrevButtons,
@@ -58,6 +58,32 @@ widgets.pager = function(options){
 		}
 	}
 
+	var nextPage = function() {
+		currentPage++;
+		currentPage <= Math.ceil(dataSource.itemsCount() / options.pageSize) ? that.changePage(currentPage) : currentPage--;
+	},	
+	prevPage = function() {
+		currentPage--;
+		currentPage >= 1 ? that.changePage(currentPage) : currentPage++;
+	},
+	dataReceived = function(result) {
+		if(result[0])
+		{
+			$(options.container + ' li').each(function() {
+				if(this.innerHTML == currentPage)
+				{
+					$(this).addClass('selectedPage');
+				}
+				else
+				{
+					$(this).removeClass('selectedPage');
+				}
+			});
+			container.trigger('pageChanged');
+			options.pageChanged();
+		}
+	};
+	
 	that.changePage = function(pageNumber, disableReadData) {
 		var deferred = new protos.deferred(),
 			result;
@@ -92,32 +118,6 @@ widgets.pager = function(options){
 			drawPager();
 		}
 	})();
-
-	var nextPage = function() {
-		currentPage++;
-		currentPage <= Math.ceil(dataSource._data.length / options.pageSize) ? that.changePage(currentPage) : currentPage--;
-	},	
-	prevPage = function() {
-		currentPage--;
-		currentPage >= 1 ? that.changePage(currentPage) : currentPage++;
-	},
-	dataReceived = function(result) {
-		if(result[0])
-		{
-			$(options.container + ' li').each(function() {
-				if(this.innerHTML == currentPage)
-				{
-					$(this).addClass('selectedPage');
-				}
-				else
-				{
-					$(this).removeClass('selectedPage');
-				}
-			});
-			container.trigger('pageChanged');
-			options.pageChanged();
-		}
-	};
 	
 	that.nextPage = function() {
 		checkWhatToChange('&rt;');

@@ -23,13 +23,14 @@ widgets.listView = function(options) {
 		}
 		
 		var html = '',
-			data = that.dataSource.data,
+			data = that.dataSource.currentPageData,
 			imgWidth = options.imageWidth;
 		for(var i = 0; i < data.length; i++)
 		{
 			var itemHtml = new protos.template(options.templateId, data[i]).render();
 			html += protos.generateHTML('li', [LIST_VIEW_ITEM], itemHtml, '', false, {'data-uid': data[i].uid});
 		}
+		
 		$(hashTag + listItemElement).append(html);
 		$(author).trigger('pageRendered');
 	};

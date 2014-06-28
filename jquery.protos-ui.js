@@ -384,303 +384,144 @@ function createInstance(options, author, func, widgetsName) {
 
 	return widgets;
 }
+
 protos.dataSource = function(options) {
-	var that = this,
-		_items; // lastly readed dataItems
+	var options = options || {}
+	, that = this
+	, remoteRepository; // When data is readed (wherever) it stores here
 	
-	that.items = function() { return _items; };
+	that.dataChanged = $.noop;
+	// In the local repo, stored data is that data that it comes (after filtering & sorting) from remote repo
+	that.localRepository = null; // TODO: Think about to be with private
+	// In currentPageData filed is stored the data from local repo but it's paged 
+	that.currentPageData = null; // TODO: Think about to be with private with getter method
 	
-	that.server = options.server;
-	that.originalData = options.data || [];
-	that.dataChanged = options.dataChanged || $.noop;
-	that.filters = [];
-	that._data = []; //Private original data
-	that.originalDataLength = that.originalData.length;
-	that.data = []; //Public data - sliced in pages, filtred and sorted
-	
-	function setProperties(data) {
-		for(var i in data)
-		{
-			var item = data[i];
-			item.uid = protos.guid();
-			item.changed = false; // Property for MVVM framework
-			item.savedChanges = true;
-			item.deleted = false;
-		}
-	}
-	
-	that.read = function(page, itemsPerPage) {
-		var query = {};
-		if(itemsPerPage || that._data.length === 0)
-		{
-			query = {
-				page: page || 0,
-				itemsPerPage: itemsPerPage
-			}
-		}
-		
-		query.filters = [];
-		for(var i in that.filters)
-		{
-			var filter = that.filters[i];
-			if(typeof(filter) !== 'function')
-			{
-				query.filters.push(filter);
-			}
-		}
-				
-		var deferred = new protos.deferred();
-		if(typeof(options.data.read) === 'function') {
-			options.data.read(query);
-			return deferred.resolve();
+	var resolveRequest = function(request, query, deferred) {
+		if(typeof(request) == 'function') {
+			request(query, deferred);
+			return;
 		}
 		
 		$.ajax({
-			type: 'json',
-			url: that.originalData.read,
+			url: options.data.read,
 			contentType: "application/json; charset=utf-8",
 			type: "GET",
 			dataType: "jsonp",
 			data: query,
 			success: function(data) {
-				that.readed(data);
-				deferred.resolve();
+				deferred.resolve(data);
 			},
 			error: function(data) {
-				deferred.reject();
+				deferred.reject(data);
 			}
 		});
-		
-		return deferred;
-	};
-	
-	that.readed = function(dataItems) {
-		var data = {},
-			disableReadData;
-		if(!dataItems.length) { //If the data is not array => the options.read method was used server paging & filtering
-			_items = dataItems.items;
-			data = dataItems.data;
-			disableReadData = true;
+	}
+	, performQuery = function (collection) {
+		// Set options.server = true, just to get items remotely and perform "server operations"
+		if(options.server) { // If there is not a server operation
+			if(!options.server.filtering) {
+				// collection = collection.where()
+			}
+			
+			if(!options.server.sorting) {
+				// collection = collection.sort()
+			}
 		}
-		else
+		return collection;
+	}
+	, setProperties = function () {
+		for(var i in remoteRepository)
 		{
-			_items = dataItems.length;
-			data = dataItems;
+			var item = remoteRepository[i];
+			
+			item.uid = protos.guid();
+			item.changed = false; // Property for MVVM framework
+			item.savedChanges = true;
+			item.deleted = false;
 		}
-		
-		setProperties(data);
-		that._data = data;
-		return that.dataChanged(disableReadData);
 	};
 	
-	var create = function(dataItems) { //Should to stay private because items are importing from addItems()
-	// TODO: batch create (e.g. 50 items per piece)
+	that.read = function() {
 		var deferred = new protos.deferred();
-	
-		if(typeof(options.data.create) === 'function') {
-			options.data.create(dataItems);
-			return deferred.resolve();
-		}
 		
-		$.ajax({
-			url: options.data.create,
-			data: { 
-				items: dataItems 
-			}
-		}).done(function () {
-			deferred.resolve();
+		deferred.fail(function(data){ /*TODO*/ console.log(data); });
+		deferred.done(function(data) {
+			// Request was done
+			remoteRepository = data[0]; // Why [0] ???
+			setProperties();
+			that.localRepository = performQuery(remoteRepository);
+			that.dataChanged(true); // true || false
 		});
+		
+		if(!remoteRepository) {
+			resolveRequest(options.data.read, {}, deferred);
+		}
 		
 		return deferred;
 	};
 	
-	that.created = function(dataItems) {
-		setProperties(dataItems);
-		that._data = that._data.concat(dataItems);
-		return that.dataChanged();
+	that.itemsCount = function() {
+		return that.localRepository.length;
 	};
 	
-	that.update = function(dataItem) { // TODO: batch update (e.g. 50 items per piece)
-		var deferred = new protos.deferred(),
-			expression = function(x) { return !x.savedChanges; },
-			itemsForUpdate = dataItem || that._data.where(expression);
-			
-		if(typeof(options.data.update) === 'function') {
-			options.data.update(itemsForUpdate);
-			return deferred.resolve();
-		}
+	that.update = function() {
+		var deferred = new protos.deferred();
 		
-		that._data.all(function(x){ x.savedChanges = true; });
+		return dataChanged();
+	};
+	
+	that.create = function() {
+		// Insert items only in remoteRepo. After that call that.refresh()
+		var deferred = new protos.deferred();
 		
-		$.ajax({
-			url: options.data.update,
-			data: {
-				items: itemsForUpdate
-			}
-		}).done(function () {
-			that.updated();
-			deferred.resolve();
+		return dataChanged();
+	};
+	
+	that.delete = function() {
+		var deferred = new protos.deferred();
+		
+		deferred.done(function() {
+			that.read();
 		});
-		
-		return deferred;
 	};
-	
-	that.updated = function(dataItems) {
-		for(var i = 0; i < dataItems.length; i++) {
-			dataItems[i].savedChanges = false;
-		}
-		return that.dataChanged();
-	};
-	
-	that.delete = function(dataItems) { // TODO: batch delete (e.g. 50 items per piece)
-		var deferred = new protos.deferred(),
-			expression = function(x) { return x.deleted; },
-			itemsForDelete = dataItems || that._data.where(expression);
-			
-		if(typeof(options.data.delete) === 'function') {
-			options.data.delete(itemsForDelete);
-			return deferred.resolve();
+
+	that.getPageData = function (page, itemsPerPage, abortReadingData) {
+		// if(abortReadingData) {
+			// return that.localRepository;
+		// }
+
+		if(options.server && options.server.paging) {
+			return that.read();
 		}
 		
-		$.ajax({
-			url: options.data.update,
-			data: {
-				items: itemsForDelete
-			}
-		}).done(function () {
-			deferred.resolve();
-		});
-		
-		return deferred;
+		return that.currentPageData = that.localRepository
+			.skip((page - 1) * itemsPerPage)
+			.take(itemsPerPage);
 	};
 	
-	that.deleted = function(dataItems) {
-		var data = that._data,
-			len = data.length;
+	that.refresh = function() {
+		var server = options.server;
 		
-		for(var i = 0; i < len; i++) {
-			var dataItem = data[i];
-			if(dataItem.deleted) {
-				protos.deeplyDelete(dataItem);
-				data = data.splice(i, 1);
-			}
+		if(server && (server.filtering || server.paging || server.sorting)) {
+			that.read();
 		}
-		
-		return that.dataChanged();
+		that.localRepository = performQuery(remoteRepository);
+		that.dataChanged(true);
+	};
+	
+	// TODO: TEST IT!
+	that.filter = function() {
+		if(options.server && options.server.filtering) {
+			return that.read();
+		}
 	};
 	
 	(function() {
-		if(that.originalData.read)
-		{
-			//that.read(); //It's not necessary
-		}
-		else
-		{
-			that.readed(that.originalData);
+		if(options.data.read) {
+			that.read();
 		}
 	})();
-	
-	that.findItem = function(guid) {
-		return that._data.first(function(dataItem) { return dataItem.uid == guid }); // Not sure that._data  or _items
-	};
-	
-	that.getPageData = function (page, itemsPerPage, disableReadData) {
-		var deferred = new protos.deferred();
-
-		if(!disableReadData && that.originalData.read) {
-			that.read(page - 1, itemsPerPage)
-				.done(function() {
-					deferred.resolve(that.data);
-				});
-		}
-		else
-		{
-			if(_items) {
-				var result = that._data.skip((page - 1) * itemsPerPage).take(itemsPerPage);
-				return that.data = result;
-			}
-		}
-		return deferred.reject();
-	};
-	
-	that.addItems = function(items) {
-		create(items).done(function() {
-			var lengthOfItems = items.length;
-			for(var i=0; i < lengthOfItems; i++)
-			{
-				var item = items[i];
-				item.uid = protos.guid();
-				item.changed = false;
-				item.savedChanges = true;
-				item.deleted = false;
-			}
-			that._data = that._data.concat(items);
-			return that.dataChanged();
-		});
-	};
-	
-	that.addFilter = function(filter){
-		that.filters.push(filter);
-	};
-	
-	that.clearFilters = function(){
-		that._data = that.originalData;
-	};
-	
-	function filterAndSort() {
-		that.filter();
-		that.sort();
-	}
-	
-	that.sort = function() {
-	
-	};
-	
-	that.filter = function (logic){
-		var result = [],
-			logic = logic | 'and',
-			filters = that.filters;
-		that._data = []; // Filtred and sorted data
-		for(var filter in filters)
-		{
-			var currentFilter = filters[filter];
-			switch(currentFilter.operator)
-			{
-				case 'eq': 
-					var data = (logic === 'and' ? that._data : that.originalData);
-					for(var item in data)
-					{
-						var dataItem = data[item];
-						for(var filedData in dataItem)
-						{
-							if(filedData == currentFilter.field && dataItem[filedData] == currentFilter.value)
-							{
-								result.push(dataItem);
-							}
-						}
-					}
-					break;
-				// TODO: another operators like neq, contains ...
-			}
-			that._data = that._data.concat(result);
-			result = [];
-		}
-	};
-	
-	that.getOriginalData = function() {
-		return that.originalData;
-	};
-	
-	that.set = function(item, prop, value) {
-		item[prop] = value;
-		item.savedChanges = false;
-		
-		return item;
-	};
-	
-	return that;
-};
-protos.draggable = function(options) {
+};protos.draggable = function(options) {
 	var clicked = false;
 	var clickPositionX,
 		clickPositionY,
@@ -925,13 +766,14 @@ widgets.listView = function(options) {
 		}
 		
 		var html = '',
-			data = that.dataSource.data,
+			data = that.dataSource.currentPageData,
 			imgWidth = options.imageWidth;
 		for(var i = 0; i < data.length; i++)
 		{
 			var itemHtml = new protos.template(options.templateId, data[i]).render();
 			html += protos.generateHTML('li', [LIST_VIEW_ITEM], itemHtml, '', false, {'data-uid': data[i].uid});
 		}
+		
 		$(hashTag + listItemElement).append(html);
 		$(author).trigger('pageRendered');
 	};
@@ -968,7 +810,7 @@ widgets.pager = function(options){
 	{
 		if(container)
 		{
-			var countOfDataItems = options.dataSource.items(),
+			var countOfDataItems = options.dataSource.itemsCount(),
 				pageSize = options.pageSize,
 				html = '',
 				nextPrevButtons = options.nextPrevButtons,
@@ -1011,6 +853,32 @@ widgets.pager = function(options){
 		}
 	}
 
+	var nextPage = function() {
+		currentPage++;
+		currentPage <= Math.ceil(dataSource.itemsCount() / options.pageSize) ? that.changePage(currentPage) : currentPage--;
+	},	
+	prevPage = function() {
+		currentPage--;
+		currentPage >= 1 ? that.changePage(currentPage) : currentPage++;
+	},
+	dataReceived = function(result) {
+		if(result[0])
+		{
+			$(options.container + ' li').each(function() {
+				if(this.innerHTML == currentPage)
+				{
+					$(this).addClass('selectedPage');
+				}
+				else
+				{
+					$(this).removeClass('selectedPage');
+				}
+			});
+			container.trigger('pageChanged');
+			options.pageChanged();
+		}
+	};
+	
 	that.changePage = function(pageNumber, disableReadData) {
 		var deferred = new protos.deferred(),
 			result;
@@ -1045,32 +913,6 @@ widgets.pager = function(options){
 			drawPager();
 		}
 	})();
-
-	var nextPage = function() {
-		currentPage++;
-		currentPage <= Math.ceil(dataSource._data.length / options.pageSize) ? that.changePage(currentPage) : currentPage--;
-	},	
-	prevPage = function() {
-		currentPage--;
-		currentPage >= 1 ? that.changePage(currentPage) : currentPage++;
-	},
-	dataReceived = function(result) {
-		if(result[0])
-		{
-			$(options.container + ' li').each(function() {
-				if(this.innerHTML == currentPage)
-				{
-					$(this).addClass('selectedPage');
-				}
-				else
-				{
-					$(this).removeClass('selectedPage');
-				}
-			});
-			container.trigger('pageChanged');
-			options.pageChanged();
-		}
-	};
 	
 	that.nextPage = function() {
 		checkWhatToChange('&rt;');
