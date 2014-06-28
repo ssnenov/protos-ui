@@ -2,7 +2,8 @@
 protos.dataSource = function(options) {
 	var options = options || {}
 	, that = this
-	, remoteRepository; // When data is readed (wherever) it stores here
+	, remoteRepository // When data is readed (wherever) it stores here
+	, itemsCount = null;
 	
 	that.dataChanged = $.noop;
 	// In the local repo, stored data is that data that it comes (after filtering & sorting) from remote repo
@@ -61,7 +62,16 @@ protos.dataSource = function(options) {
 		deferred.fail(function(data){ /*TODO*/ console.log(data); });
 		deferred.done(function(data) {
 			// Request was done
-			remoteRepository = data[0]; // Why [0] ???
+			var data = data[0]; // Why [0] ???
+			
+			if(data.items) {
+				itemsCount = data.items;
+				remoteRepository = data.data;
+			}
+			else
+			{
+				remoteRepository = data[0];
+			}
 			setProperties();
 			that.localRepository = performQuery(remoteRepository);
 			that.dataChanged(true); // true || false
@@ -75,7 +85,7 @@ protos.dataSource = function(options) {
 	};
 	
 	that.itemsCount = function() {
-		return that.localRepository.length;
+		return itemsCount !== null ? itemsCount : that.localRepository.length;
 	};
 	
 	that.update = function() {

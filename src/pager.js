@@ -113,10 +113,6 @@ widgets.pager = function(options){
 			});
 			lazyLoading = new protos.lazyLoading({container: container});
 		}
-		else
-		{
-			drawPager();
-		}
 	})();
 	
 	that.nextPage = function() {

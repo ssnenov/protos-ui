@@ -44,9 +44,5 @@ widgets.listView = function(options) {
 		nextPrevButtons: options.nextPrevButtons
 	});
 	
-	(function () {
-		that.pager.changePage(1);
-	})();
-	
 	return that;
 };

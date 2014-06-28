@@ -15,7 +15,7 @@
 		data: {
 			//read: 'http://demos.kendoui.com/service/Products'
  			read: function(query, deferred) {
-				/*$.ajax({
+				$.ajax({
 					type: 'json',
 					contentType: "application/json; charset=utf-8",
 					type: "GET",
@@ -27,19 +27,9 @@
 						data.data = response;
 						data.items = response.length;
 						
-						dataSource.readed(data);
+						deferred.resolve(data);
 					}
-				});*/
-
-				deferred.resolve([
-				{ ProductID: "test", ProductName: "test name"},
-				{ ProductID: "2test", ProductName: "test name"},
-				{ ProductID: "test beer", ProductName: "test name"},
-				{ ProductID: "Truck", ProductName: "test name"},
-				{ ProductID: "Beer", ProductName: "test name"},
-				{ ProductID: "6test", ProductName: "test name"},
-				{ ProductID: "Car", ProductName: "test name"},
-				]);
+				});
 			}
 		},
 		server: {
