@@ -113,6 +113,7 @@ widgets.pager = function(options){
 			});
 			lazyLoading = new protos.lazyLoading({container: container});
 		}
+		dataSource.pageSize = options.pageSize;
 	})();
 	
 	that.nextPage = function() {

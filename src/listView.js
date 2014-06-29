@@ -44,5 +44,9 @@ widgets.listView = function(options) {
 		nextPrevButtons: options.nextPrevButtons
 	});
 	
+	(function() {
+		options.data.read({ page:1, pageSize: options.pageSize });
+	})();
+	
 	return that;
 };

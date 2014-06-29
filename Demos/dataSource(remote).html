@@ -13,8 +13,11 @@
 <script type="text/javascript">	
 	var dataSource = new protos.dataSource({
 		data: {
-			//read: 'http://demos.kendoui.com/service/Products'
- 			read: function(query, deferred) {
+			read: {
+				url: 'http://demos.kendoui.com/service/Products',
+				dataType: "jsonp",
+			}
+ 			/*read: function(query, deferred) {
 				$.ajax({
 					type: 'json',
 					contentType: "application/json; charset=utf-8",
@@ -30,7 +33,7 @@
 						deferred.resolve(data);
 					}
 				});
-			}
+			}*/
 		},
 		server: {
 			paging: false,
