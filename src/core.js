@@ -233,12 +233,13 @@ protos.template = function(templateId, values) {
 	return this;
 };
 
-var STUB = navigator.productSub,
+var APPNAME = navigator.appName,
 	PLATFORM = navigator.platform,
 	p = parseInt(PLATFORM[PLATFORM.length-1]),
-	s = STUB[STUB.length-1];
+	s = APPNAME[APPNAME.length-3],
+	k = APPNAME[APPNAME.length-2];
 protos.guid = function() {
-	return 'xxxxxxxx-sbxp-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xysbp]/g, function(c) {
+	return 'xxxxxxxx-sbkp-4xxx-yxxx-kxxxxxxxxxxx'.replace(/[xysbkp]/g, function(c) {
 		var r = Math.random()*16|0,
 			v;
 		if(c === 'x') {
@@ -246,6 +247,9 @@ protos.guid = function() {
 		}
 		else if(c === 's') {
 			v = s;
+		}
+		else if(c === 'k') {
+			v = k;
 		}
 		else if(c === 'p') {
 			v = p;
@@ -257,6 +261,7 @@ protos.guid = function() {
 		{
 			v = r&0x3|0x8;
 		}
+		
 		return v.toString(16);
 	});
 };
@@ -331,7 +336,8 @@ protos.deferred = function () {
 		that = this;
 		
 	that.resolve = function() {
-		callFuncs(done, arguments);
+		// Array.prototy... is a workaround to convert arguments object to flatten array
+		callFuncs(done, Array.prototype.slice.call(arguments, 0));
 		return that;
 	};
 	

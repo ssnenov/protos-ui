@@ -7,7 +7,7 @@ widgets.listView = function(options) {
 		lazyLoading: false
 	},
 		that = this,
-		author = options.author[0],
+		author = options.author[0] || {},
 		LIST_VIEW_ITEM = 'listViewItem',
 		listItemElement = author.id + '_listItems',
 		pagerContatinerElement = author.id + 'pagerContainer';
@@ -45,7 +45,7 @@ widgets.listView = function(options) {
 	});
 	
 	(function() {
-		options.data.read({ page:1, pageSize: options.pageSize });
+		options.data.read();
 	})();
 	
 	return that;
