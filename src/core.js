@@ -324,6 +324,24 @@ protos.routeToArray = function(route) {
 	}
 }
 
+$.fn.serializeJson = function() {
+   var result = {};
+   var serializedArray = this.serializeArray();
+   
+   $.each(serializedArray, function() {
+       if (result[this.name] !== undefined) {
+           if (!result[this.name].push) {
+               result[this.name] = [result[this.name]];
+           }
+           result[this.name].push(this.value || '');
+       } else {
+           result[this.name] = this.value || '';
+       }
+   });
+   
+   return result;
+};
+
 protos.deferred = function () {
 	var done = [],
 		fail = [],

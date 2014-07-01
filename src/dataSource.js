@@ -56,10 +56,17 @@ protos.dataSource = function(options) {
 		}
 		return collection;
 	}
-	, setProperties = function (items) {
+	, observer = function() {
+		this.savedChanges = false;
+	}	
+	,setProperties = function (items) {
 		for(var i=items.length-1; i >= 0; --i)
 		{
 			var item = items[i];
+			
+			for(var prop in item) {
+				item.watch(prop, observer);
+			}
 			
 			item.uid = protos.guid();
 			item.changed = false; // Property for MVVM framework
@@ -127,7 +134,7 @@ protos.dataSource = function(options) {
 		});
 		
 		if(!options.data.create) {
-			deferred.resolve();
+			deferred.resolve(items);
 			return;
 		}
 		

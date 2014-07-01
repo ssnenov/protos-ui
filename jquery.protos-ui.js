@@ -326,6 +326,24 @@ protos.routeToArray = function(route) {
 	}
 }
 
+$.fn.serializeJson = function() {
+   var result = {};
+   var serializedArray = this.serializeArray();
+   
+   $.each(serializedArray, function() {
+       if (result[this.name] !== undefined) {
+           if (!result[this.name].push) {
+               result[this.name] = [result[this.name]];
+           }
+           result[this.name].push(this.value || '');
+       } else {
+           result[this.name] = this.value || '';
+       }
+   });
+   
+   return result;
+};
+
 protos.deferred = function () {
 	var done = [],
 		fail = [],
@@ -448,10 +466,17 @@ protos.dataSource = function(options) {
 		}
 		return collection;
 	}
-	, setProperties = function (items) {
+	, observer = function() {
+		this.savedChanges = false;
+	}	
+	,setProperties = function (items) {
 		for(var i=items.length-1; i >= 0; --i)
 		{
 			var item = items[i];
+			
+			for(var prop in item) {
+				item.watch(prop, observer);
+			}
 			
 			item.uid = protos.guid();
 			item.changed = false; // Property for MVVM framework
@@ -519,7 +544,7 @@ protos.dataSource = function(options) {
 		});
 		
 		if(!options.data.create) {
-			deferred.resolve();
+			deferred.resolve(items);
 			return;
 		}
 		
@@ -670,6 +695,42 @@ protos.draggable = function(options) {
 	});
 
 	return this;
+};protos.formFiller = function(form, json) {
+	form = $(form);
+	
+	form.find("textarea").each(function(i, element) {
+		$(element).val(json[element.name]);
+	});
+
+	form.find("select").each(function(i, element) {
+		var value = json[element.name];
+		$(element).val(value);
+	});
+
+	form.find("input[type=radio]").each(function(i, element) {
+	  var value = json[element.name];
+	  $(element).attr('data-finished', true);
+	  
+	  if(value && element.value == value) {
+		$(element).attr('checked', 'checked');
+	  }
+	});
+
+	form.find("input[type=checkbox]").each(function(i, element) {
+	  var values = json[element.name];
+	  $(element).attr('data-finished', true);
+	  
+	  if(values && values.indexOf(element.value) !== -1) {
+		$(element).attr('checked', 'checked');
+	  }
+	});
+
+	form.find("input[data-finished!=true]").each(function(i, element) {
+	  var value = json[element.name];
+	  if(value) {
+		$(element).val(value);
+	  }
+	});
 };Array.prototype.where = function (expression) {
 	var result = [],
 		length = this.length;
@@ -856,7 +917,49 @@ widgets.listView = function(options) {
 	
 	return that;
 };
-widgets.pager = function(options){
+if (!Object.prototype.watch) {
+	Object.defineProperty(Object.prototype, "watch", {
+		  enumerable: false
+		, configurable: true
+		, writable: false
+		, value: function (prop, handler) {
+			var
+			  oldval = this[prop]
+			, newval = oldval
+			, getter = function () {
+				return newval;
+			}
+			, setter = function (val) {
+				oldval = newval;
+				return newval = handler.call(this, prop, oldval, val);
+			}
+			;
+			
+			if (delete this[prop]) { // can't watch constants
+				Object.defineProperty(this, prop, {
+					  get: getter
+					, set: setter
+					, enumerable: true
+					, configurable: true
+				});
+			}
+		}
+	});
+}
+
+// object.unwatch
+if (!Object.prototype.unwatch) {
+	Object.defineProperty(Object.prototype, "unwatch", {
+		  enumerable: false
+		, configurable: true
+		, writable: false
+		, value: function (prop) {
+			var val = this[prop];
+			delete this[prop]; // remove accessors
+			this[prop] = val;
+		}
+	});
+}widgets.pager = function(options){
 	var defaultOptions = {
 		pageSize: 15,
 		pageChanged: $.noop,
