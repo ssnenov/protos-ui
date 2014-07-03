@@ -52,16 +52,16 @@
 			
 			/////////////////////////////////////////////////////////
 			protos.widgets.popUp.hide = function() { //Overide hide function
-			$(".p-PopUp").hide(1000);
+			$(".p-PopUp").fadeOut(350);
 				setTimeout(function() { // setTimeout it's not the best way to do it , but it's workaround.
 				$("#showWindow2").trigger("hidePopUp")
-				}, 1000);			
+				}, 350);			
 			};
 			
 			protos.widgets.popUp.show = function() { //Overide show function
 				$("#showWindow2").trigger("showPopUp");
 				$(".p-PopUp").hide();
-				$(".p-PopUp").show(1000);
+				$(".p-PopUp").fadeIn(350); // slideDown
 			};
 			
 			$("#showWindow2").protos().popUp({

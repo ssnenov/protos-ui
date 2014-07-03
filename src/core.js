@@ -348,7 +348,7 @@ protos.deferred = function () {
 		callFuncs = function(array, args) {
 			for(var i = 0; i < array.length; i++)
 			{
-				array[i](args);
+				array[i].apply(undefined, args);
 			}
 		},
 		that = this;

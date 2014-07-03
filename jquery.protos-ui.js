@@ -350,7 +350,7 @@ protos.deferred = function () {
 		callFuncs = function(array, args) {
 			for(var i = 0; i < array.length; i++)
 			{
-				array[i](args);
+				array[i].apply(undefined, args);
 			}
 		},
 		that = this;
@@ -424,7 +424,13 @@ protos.dataSource = function(options) {
 	that._pageSize = 15;
 	
 	var resolveRequest = function(request, query, deferred) {
-		var typeOfRequest = typeof(request);
+		var typeOfRequest = typeof(request)
+			, rawQuery = query;
+		
+		if(options.prepareData) {
+			query = options.prepareData(query);
+		}
+		
 		if(typeOfRequest === 'function') {
 			request(query, deferred);
 			return;
@@ -436,7 +442,7 @@ protos.dataSource = function(options) {
 			type: "GET",
 			data: query,
 			success: function(data) {
-				deferred.resolve(data);
+				deferred.resolve(data, rawQuery);
 			},
 			error: function(data) {
 				deferred.reject(data);
@@ -448,7 +454,7 @@ protos.dataSource = function(options) {
 		}
 		else
 		{
-			queryOptions = $.extend(request, queryOptions);
+			queryOptions = $.extend(queryOptions, request);
 		}
 		
 		$.ajax(queryOptions);
@@ -492,13 +498,13 @@ protos.dataSource = function(options) {
 		deferred.done(function(data) {
 			// Request was done
 			lastQuery = query;
-			if(data[0].Total) {
-				itemsCount = data[0].Total;
-				remoteRepository = data[0].Data;
+			if(data.Total) {
+				itemsCount = data.Total;
+				remoteRepository = data.Data;
 			}
 			else
 			{
-				remoteRepository = data[0];
+				remoteRepository = data;
 			}
 			setProperties(remoteRepository);
 			that.localRepository = performQuery(remoteRepository);
@@ -506,7 +512,12 @@ protos.dataSource = function(options) {
 		});
 		
 		if(options.server && options.server.paging) {
-			query = $.extend({ page: 1, pageSize: that._pageSize }, query);
+			query = $.extend({
+					Pagination: {
+						Page: 1,
+						PageSize: that._pageSize 
+					}
+				}, query);
 		}
 		
 		// TODO: ADD page & pageSize as parameter of this method
@@ -523,9 +534,26 @@ protos.dataSource = function(options) {
 	};
 	
 	that.update = function() {
-		var deferred = new protos.deferred();
+		var deferred = new protos.deferred()
+			, itemsForUpdate = remoteRepository.where(function(x) { return !x.savedChanges; })
+			, updateMethod = options.data.update;
+			
+		deferred.done(function(data, items) {
+			for(var i = items.length-1; i >= 0; --i) {
+				items[i].savedChanges = true;
+			}
+			
+			that.dataChanged(true);
+		});
+			
+		if(typeof(updateMethod) === 'function') {
+			updateMethod(itemsForUpdate, deferred);
+			return;
+		}
 		
-		return dataChanged();
+		resolveRequest(updateMethod, itemsForUpdate, deferred);
+		
+		return deferred;
 	};
 	
 	that.addItems = function(items) {
@@ -538,6 +566,7 @@ protos.dataSource = function(options) {
 			if(!items instanceof Array) { // If it's a item (object), just wrap it as array, because setProperties requires array
 				items = [items];
 			}
+			
 			setProperties(items);
 			remoteRepository = remoteRepository.concat(items);
 			that.refresh();
@@ -567,9 +596,11 @@ protos.dataSource = function(options) {
 				return that.currentPageData = that.localRepository;
 			}
 			return that.read({
-				page: page,
-				pageSize: itemsPerPage
-			});
+					Pagination: {
+						Page: page,
+						PageSize: itemsPerPage 
+					}
+				});
 		}
 		
 		return that.currentPageData = that.localRepository
@@ -931,7 +962,9 @@ if (!Object.prototype.watch) {
 			}
 			, setter = function (val) {
 				oldval = newval;
-				return newval = handler.call(this, prop, oldval, val);
+				newval = val;
+				handler.call(this, prop, oldval, val);
+				//return newval;
 			}
 			;
 			
@@ -1086,8 +1119,11 @@ if (!Object.prototype.unwatch) {
 	};
 	
 	var checkWhatToChange = function(pageNumber) {
-		if(!isNaN(parseInt(pageNumber))) {
-			that.changePage(pageNumber);
+		var pageNumberAsInt = parseInt(pageNumber);
+		if(!isNaN(pageNumberAsInt)) {
+			if(pageNumberAsInt != currentPage) {
+				that.changePage(pageNumber);
+			}
 		} 
 		else {
 			pageNumber === '&lt;' ? prevPage() : nextPage();

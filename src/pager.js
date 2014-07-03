@@ -125,8 +125,11 @@ widgets.pager = function(options){
 	};
 	
 	var checkWhatToChange = function(pageNumber) {
-		if(!isNaN(parseInt(pageNumber))) {
-			that.changePage(pageNumber);
+		var pageNumberAsInt = parseInt(pageNumber);
+		if(!isNaN(pageNumberAsInt)) {
+			if(pageNumberAsInt != currentPage) {
+				that.changePage(pageNumber);
+			}
 		} 
 		else {
 			pageNumber === '&lt;' ? prevPage() : nextPage();
