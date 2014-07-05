@@ -35,7 +35,7 @@ protos.dataSource = function(options) {
 				deferred.resolve(data, rawQuery);
 			},
 			error: function(data) {
-				deferred.reject(data);
+				deferred.reject(data, rawQuery);
 			}
 		};
 		
@@ -138,7 +138,7 @@ protos.dataSource = function(options) {
 			
 		if(typeof(updateMethod) === 'function') {
 			updateMethod(itemsForUpdate, deferred);
-			return;
+			return deferred;
 		}
 		
 		resolveRequest(updateMethod, itemsForUpdate, deferred);
@@ -146,7 +146,7 @@ protos.dataSource = function(options) {
 		return deferred;
 	};
 	
-	that.addItems = function(items) {
+	that.create = function(items) {
 		// Insert items only in remoteRepo. After that call that.refresh()
 		var deferred = new protos.deferred();
 		
@@ -173,11 +173,22 @@ protos.dataSource = function(options) {
 	};
 	
 	that.delete = function() {
-		var deferred = new protos.deferred();
+		var deferred = new protos.deferred(),
+			deletedItemsExpression = function(x) { return x.deleted; };
 		
 		deferred.done(function() {
-			that.read();
+			that.refresh();
 		});
+		
+		if(!options.data.delete) {
+			remoteRepository.remove(deletedItemsExpression);
+			deferred.resolve();
+			return;
+		}
+		
+		resolveRequest(options.data.delete, remoteRepository.where(deletedItemsExpression), deferred);
+		
+		return deferred;
 	};
 
 	that.getPageData = function (page, itemsPerPage, abortReadingData) {
@@ -212,9 +223,11 @@ protos.dataSource = function(options) {
 	};
 	
 	// TODO: TEST IT!
-	that.filter = function() {
+	that.filter = function(filters) {
 		if(options.server && options.server.filtering) {
-			return that.read();
+			return that.read({
+				Filters: filters
+			});
 		}
 	};
 	

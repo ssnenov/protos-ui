@@ -59,7 +59,7 @@ while (left.length > 0 || right.length > 0) {
 return result;
 }
 
-Array.prototype.last = function (expression) {
+Array.prototype.last = function (expression) { // TODO: Just inverse the loop
 	var length = this.length,
 		lastValue;
 		
@@ -113,4 +113,13 @@ Array.prototype.take = function(count) {
 	}
 };
 
+Array.prototype.remove = function(expression) {
+	var length = this.length;
+	for(var i = 0; i < length; i++) {
+		var item = this[i];
+		if(expression(item) === true) {
+			this.splice(i,1);
+		}
+	}
+};
 //});

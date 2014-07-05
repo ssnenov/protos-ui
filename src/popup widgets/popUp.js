@@ -7,7 +7,7 @@ widgets.popUpCore = function (options) {
 		DARKLEYER = "p-darkLayer",
 		POPUPCLASS = ".p-PopUp",
 		that = this;
-		that.author = $(options.author.selector);
+		that.author = $(options.author);
 			
 	that.darkLayerHtml = generateHTML('div', [DARKLEYER], '', '', false, { style: 'background-color: rgba(0,0,0,' + options.darkness + ')'});
 	that.contentHtml = generateHTML("div", [CONTENTCLASS], options.content);
@@ -56,7 +56,7 @@ widgets.popUpCore = function (options) {
 		attachCloseEvents(that);
 
 		visible = true;
-		//TODO: When press ESC button close the popUp
+		that.author.trigger("popUpShowed");
 	},
 	attachCloseEvents = function() {
 		$("div" + POPUPCLASS + " a").on('click', "." + CLOSEBUTTONCLASS, function() {

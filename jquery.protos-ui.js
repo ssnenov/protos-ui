@@ -445,7 +445,7 @@ protos.dataSource = function(options) {
 				deferred.resolve(data, rawQuery);
 			},
 			error: function(data) {
-				deferred.reject(data);
+				deferred.reject(data, rawQuery);
 			}
 		};
 		
@@ -548,7 +548,7 @@ protos.dataSource = function(options) {
 			
 		if(typeof(updateMethod) === 'function') {
 			updateMethod(itemsForUpdate, deferred);
-			return;
+			return deferred;
 		}
 		
 		resolveRequest(updateMethod, itemsForUpdate, deferred);
@@ -556,7 +556,7 @@ protos.dataSource = function(options) {
 		return deferred;
 	};
 	
-	that.addItems = function(items) {
+	that.create = function(items) {
 		// Insert items only in remoteRepo. After that call that.refresh()
 		var deferred = new protos.deferred();
 		
@@ -583,11 +583,22 @@ protos.dataSource = function(options) {
 	};
 	
 	that.delete = function() {
-		var deferred = new protos.deferred();
+		var deferred = new protos.deferred(),
+			deletedItemsExpression = function(x) { return x.deleted; };
 		
 		deferred.done(function() {
-			that.read();
+			that.refresh();
 		});
+		
+		if(!options.data.delete) {
+			remoteRepository.remove(deletedItemsExpression);
+			deferred.resolve();
+			return;
+		}
+		
+		resolveRequest(options.data.delete, remoteRepository.where(deletedItemsExpression), deferred);
+		
+		return deferred;
 	};
 
 	that.getPageData = function (page, itemsPerPage, abortReadingData) {
@@ -622,9 +633,11 @@ protos.dataSource = function(options) {
 	};
 	
 	// TODO: TEST IT!
-	that.filter = function() {
+	that.filter = function(filters) {
 		if(options.server && options.server.filtering) {
-			return that.read();
+			return that.read({
+				Filters: filters
+			});
 		}
 	};
 	
@@ -823,7 +836,7 @@ while (left.length > 0 || right.length > 0) {
 return result;
 }
 
-Array.prototype.last = function (expression) {
+Array.prototype.last = function (expression) { // TODO: Just inverse the loop
 	var length = this.length,
 		lastValue;
 		
@@ -877,6 +890,15 @@ Array.prototype.take = function(count) {
 	}
 };
 
+Array.prototype.remove = function(expression) {
+	var length = this.length;
+	for(var i = 0; i < length; i++) {
+		var item = this[i];
+		if(expression(item) === true) {
+			this.splice(i,1);
+		}
+	}
+};
 //});
 protos.lazyLoading = function(options) {
 	var defaultOptions = {
@@ -957,20 +979,17 @@ if (!Object.prototype.watch) {
 			var
 			  oldval = this[prop]
 			, newval = oldval
-			, getter = function () {
-				return newval;
-			}
+			, getter = function () { return newval; }
 			, setter = function (val) {
 				oldval = newval;
 				newval = val;
 				handler.call(this, prop, oldval, val);
 				//return newval;
-			}
-			;
+			};
 			
 			if (delete this[prop]) { // can't watch constants
 				Object.defineProperty(this, prop, {
-					  get: getter
+					  //get: getter
 					, set: setter
 					, enumerable: true
 					, configurable: true
@@ -1481,7 +1500,7 @@ widgets.imageGallery = function (options) {
 		DARKLEYER = "p-darkLayer",
 		POPUPCLASS = ".p-PopUp",
 		that = this;
-		that.author = $(options.author.selector);
+		that.author = $(options.author);
 			
 	that.darkLayerHtml = generateHTML('div', [DARKLEYER], '', '', false, { style: 'background-color: rgba(0,0,0,' + options.darkness + ')'});
 	that.contentHtml = generateHTML("div", [CONTENTCLASS], options.content);
@@ -1530,7 +1549,7 @@ widgets.imageGallery = function (options) {
 		attachCloseEvents(that);
 
 		visible = true;
-		//TODO: When press ESC button close the popUp
+		that.author.trigger("popUpShowed");
 	},
 	attachCloseEvents = function() {
 		$("div" + POPUPCLASS + " a").on('click', "." + CLOSEBUTTONCLASS, function() {
