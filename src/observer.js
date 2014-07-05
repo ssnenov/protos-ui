@@ -17,7 +17,7 @@ if (!Object.prototype.watch) {
 			
 			if (delete this[prop]) { // can't watch constants
 				Object.defineProperty(this, prop, {
-					  //get: getter
+					get: getter
 					, set: setter
 					, enumerable: true
 					, configurable: true
