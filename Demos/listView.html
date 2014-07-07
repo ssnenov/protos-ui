@@ -1,0 +1,31 @@
+<script src="../jquery.js" type="text/javascript"></script>
+<!--<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script> -->
+    <script src="../jquery.protos-ui.js" type="text/javascript"></script>
+    <link href="../protos-ui.css" rel="stylesheet" />
+
+<div id="carsList" style="border: solid black 1px; width: 200px;">
+</div>
+
+<script id="cars" type="protos-tmpl">
+#=Make# - #=Model#
+</script>
+
+<script type="text/javascript">	
+	var dataSource = new protos.dataSource({
+		data: {
+			read: 'http://localhost:8123/api/Cars/Get',
+			type: 'aspnet'
+		},
+		server: {
+			paging: true,
+			filtering: false,
+			sorting: false
+		}
+	});
+	
+	$("#carsList").protos().listView({
+		data: dataSource,
+		pageSize: 3,
+		templateId: 'cars'
+	});
+</script>

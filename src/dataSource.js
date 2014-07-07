@@ -17,6 +17,16 @@ protos.dataSource = function(options) {
 		var typeOfRequest = typeof(request)
 			, rawQuery = query;
 		
+		if(options.data.type === 'aspnet' && query.type ) {
+			if(query.type === 'GET') {
+				query = $.param(query);
+			}
+			else
+			{
+				query = JSON.stringify(query);
+			}
+		}
+		
 		if(options.prepareData) {
 			query = options.prepareData(query);
 		}

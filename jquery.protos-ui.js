@@ -427,6 +427,16 @@ protos.dataSource = function(options) {
 		var typeOfRequest = typeof(request)
 			, rawQuery = query;
 		
+		if(options.data.type === 'aspnet' && query.type ) {
+			if(query.type === 'GET') {
+				query = $.param(query);
+			}
+			else
+			{
+				query = JSON.stringify(query);
+			}
+		}
+		
 		if(options.prepareData) {
 			query = options.prepareData(query);
 		}
@@ -942,7 +952,7 @@ widgets.listView = function(options) {
 			$(hashTag + listItemElement + ' li').remove('.' + LIST_VIEW_ITEM);
 		}
 		
-		var html = '',
+		var html = '', 
 			data = that.dataSource.currentPageData,
 			imgWidth = options.imageWidth;
 		for(var i = 0; i < data.length; i++)

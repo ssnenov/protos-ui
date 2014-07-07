@@ -22,7 +22,7 @@ widgets.listView = function(options) {
 			$(hashTag + listItemElement + ' li').remove('.' + LIST_VIEW_ITEM);
 		}
 		
-		var html = '',
+		var html = '', 
 			data = that.dataSource.currentPageData,
 			imgWidth = options.imageWidth;
 		for(var i = 0; i < data.length; i++)
