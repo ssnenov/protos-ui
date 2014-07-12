@@ -17,11 +17,10 @@
 	Model: <input name="Model" /><br />
 	Price: <input name="Price" /><br />
 	<input type="submit" value="Update">
-</form>
 </script>
 
 <script id="cars" type="protos-tmpl">
-#=Make# - #=Model# <b>#=Price#</b> <span class="itemEdit"><i>Edit</i></span>
+#=Make# - #=Model# <b>#=Price#</b> <span class="itemEdit"><i>Edit</i></span> - <span class="itemDelete"><i>Delete</i></span>
 </script>
 
 <script type="text/javascript">	
@@ -45,6 +44,9 @@
 		data: dataSource,
 		pageSize: 3,
 		editTemplate: 'editTmpl',
+		popUp: {
+			width: 580
+		},
 		templateId: 'cars'
 	});
 </script>

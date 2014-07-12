@@ -23,17 +23,19 @@ widgets.listView = function(options) {
 			$(element).on('click', function() {
 				var itemElement = $(this).closest('.listViewItem')
 					, uid = itemElement.attr('data-uid')
-					, dataItem = dataSource.findItem(uid)
+					, dataItem = that.dataSource.findItem(uid)
 					, popUp = itemElement.data('popUp');
 
 				if(!popUp) {
 					var editTemplate = protos.template(options.editTemplate).render()
 						, content = protos.generateHTML('form', [], editTemplate, 'editForm');
 						
-					itemElement.protos().popUp({
-						content: content,
-						title: 'Edit item'
-					});
+					itemElement.protos().popUp(
+						$.extend({
+							content: content,
+							title: 'Edit item'
+						}, options.popUp || {})
+					);
 					popUp = itemElement.data('popUp');
 				}
 				
@@ -45,11 +47,22 @@ widgets.listView = function(options) {
 						$.extend(dataItem, $('#editForm').serializeJson());
 						
 						popUp.hide();
-						dataSource.update();
+						that.dataSource.update();
 					});
 				});
 				
 				popUp.show();
+			});
+		});
+		
+		$(itemsSelector + 'itemDelete').each(function(i, element) {
+			$(element).on('click', function() {
+				var itemElement = $(this).closest('.listViewItem')
+					, uid = itemElement.attr('data-uid')
+					, dataItem = that.dataSource.findItem(uid);
+				
+				dataItem.deleted = true;
+				that.dataSource.delete();
 			});
 		});
 	};

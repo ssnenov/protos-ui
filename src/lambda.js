@@ -114,12 +114,16 @@ Array.prototype.take = function(count) {
 };
 
 Array.prototype.remove = function(expression) {
-	var length = this.length;
+	var length = this.length-1
+		, result = this;
+	
 	for(var i = 0; i < length; i++) {
 		var item = this[i];
 		if(expression(item) === true) {
-			this.splice(i,1);
+			result.splice(i,1);
+			--i;
 		}
 	}
+	return result;
 };
 //});

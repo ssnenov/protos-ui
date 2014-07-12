@@ -435,13 +435,7 @@ protos.dataSource = function(options) {
 		var queryOptions = {
 			contentType: "application/json; charset=utf-8",
 			dataType: "json",
-			type: "GET",
-			success: function(data) {
-				deferred.resolve(data, rawQuery);
-			},
-			error: function(data) {
-				deferred.reject(data, rawQuery);
-			}
+			type: "GET"
 		};
 		
 		if(typeOfRequest === 'string') {
@@ -467,6 +461,8 @@ protos.dataSource = function(options) {
 		}
 		
 		queryOptions.data = query;
+		queryOptions.success = function(data) { deferred.resolve(data, rawQuery); };
+		queryOptions.error = function(data) { deferred.reject(data, rawQuery); };
 		
 		$.ajax(queryOptions);
 	}
@@ -584,6 +580,11 @@ protos.dataSource = function(options) {
 			return;
 		}
 		
+		if(typeof(options.data.create) === 'function') {
+			options.data.create(items, deferred);
+			return deferred;
+		}
+		
 		resolveRequest(options.data.create, items, deferred);
 		
 		return deferred;
@@ -594,11 +595,11 @@ protos.dataSource = function(options) {
 			deletedItemsExpression = function(x) { return x.deleted; };
 		
 		deferred.done(function() {
+			remoteRepository = remoteRepository.remove(deletedItemsExpression);
 			that.refresh();
 		});
 		
 		if(!options.data.delete) {
-			remoteRepository.remove(deletedItemsExpression);
 			deferred.resolve();
 			return;
 		}
@@ -899,13 +900,17 @@ Array.prototype.take = function(count) {
 };
 
 Array.prototype.remove = function(expression) {
-	var length = this.length;
+	var length = this.length-1
+		, result = this;
+	
 	for(var i = 0; i < length; i++) {
 		var item = this[i];
 		if(expression(item) === true) {
-			this.splice(i,1);
+			result.splice(i,1);
+			--i;
 		}
 	}
+	return result;
 };
 //});
 protos.lazyLoading = function(options) {
@@ -951,17 +956,19 @@ widgets.listView = function(options) {
 			$(element).on('click', function() {
 				var itemElement = $(this).closest('.listViewItem')
 					, uid = itemElement.attr('data-uid')
-					, dataItem = dataSource.findItem(uid)
+					, dataItem = that.dataSource.findItem(uid)
 					, popUp = itemElement.data('popUp');
 
 				if(!popUp) {
 					var editTemplate = protos.template(options.editTemplate).render()
 						, content = protos.generateHTML('form', [], editTemplate, 'editForm');
 						
-					itemElement.protos().popUp({
-						content: content,
-						title: 'Edit item'
-					});
+					itemElement.protos().popUp(
+						$.extend({
+							content: content,
+							title: 'Edit item'
+						}, options.popUp || {})
+					);
 					popUp = itemElement.data('popUp');
 				}
 				
@@ -973,11 +980,22 @@ widgets.listView = function(options) {
 						$.extend(dataItem, $('#editForm').serializeJson());
 						
 						popUp.hide();
-						dataSource.update();
+						that.dataSource.update();
 					});
 				});
 				
 				popUp.show();
+			});
+		});
+		
+		$(itemsSelector + 'itemDelete').each(function(i, element) {
+			$(element).on('click', function() {
+				var itemElement = $(this).closest('.listViewItem')
+					, uid = itemElement.attr('data-uid')
+					, dataItem = that.dataSource.findItem(uid);
+				
+				dataItem.deleted = true;
+				that.dataSource.delete();
 			});
 		});
 	};

@@ -25,13 +25,7 @@ protos.dataSource = function(options) {
 		var queryOptions = {
 			contentType: "application/json; charset=utf-8",
 			dataType: "json",
-			type: "GET",
-			success: function(data) {
-				deferred.resolve(data, rawQuery);
-			},
-			error: function(data) {
-				deferred.reject(data, rawQuery);
-			}
+			type: "GET"
 		};
 		
 		if(typeOfRequest === 'string') {
@@ -57,6 +51,8 @@ protos.dataSource = function(options) {
 		}
 		
 		queryOptions.data = query;
+		queryOptions.success = function(data) { deferred.resolve(data, rawQuery); };
+		queryOptions.error = function(data) { deferred.reject(data, rawQuery); };
 		
 		$.ajax(queryOptions);
 	}
@@ -174,6 +170,11 @@ protos.dataSource = function(options) {
 			return;
 		}
 		
+		if(typeof(options.data.create) === 'function') {
+			options.data.create(items, deferred);
+			return deferred;
+		}
+		
 		resolveRequest(options.data.create, items, deferred);
 		
 		return deferred;
@@ -184,11 +185,11 @@ protos.dataSource = function(options) {
 			deletedItemsExpression = function(x) { return x.deleted; };
 		
 		deferred.done(function() {
+			remoteRepository = remoteRepository.remove(deletedItemsExpression);
 			that.refresh();
 		});
 		
 		if(!options.data.delete) {
-			remoteRepository.remove(deletedItemsExpression);
 			deferred.resolve();
 			return;
 		}
