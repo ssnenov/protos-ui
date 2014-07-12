@@ -566,7 +566,7 @@ protos.dataSource = function(options) {
 		deferred.done(function(result) {
 			var items = result; // If it's passed some results from the ajax request, then get them otherwise keep with items
 			
-			if(!items instanceof Array) { // If it's a item (object), just wrap it as array, because setProperties requires array
+			if(!(items instanceof Array)) { // If it's a item (object), just wrap it as array, because setProperties requires array
 				items = [items];
 			}
 			
