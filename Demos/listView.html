@@ -10,13 +10,14 @@
 </style>	
 
 <div id="carsList" style="border: solid black 1px; width: 200px;">
+	<button class="itemCreate">Create a new car</button>
 </div>
 
 <script id="editTmpl" type="protos-tmpl">
 	Make: <input name="Make" /><br />
 	Model: <input name="Model" /><br />
 	Price: <input name="Price" /><br />
-	<input type="submit" value="Update">
+	<input type="submit" value="#= action === 'create' ? 'Create' : 'Update'#">
 </script>
 
 <script id="cars" type="protos-tmpl">
@@ -26,6 +27,10 @@
 <script type="text/javascript">	
 	var dataSource = new protos.dataSource({
 		data: {
+			create: {
+				url: 'http://localhost:8123/api/Cars/Insert',
+				type: 'POST'
+			},
 			read: 'http://localhost:8123/api/Cars/Get',
 			update: {
 				url: 'http://localhost:8123/api/Cars/Update',

@@ -1,4 +1,4 @@
-widgets.listView = function(options) {
+widgets.listView = function (options) {
 	var defaultOptions = {
 		width: 600,
 		height: 400,
@@ -11,23 +11,24 @@ widgets.listView = function(options) {
 		LIST_VIEW_ITEM = 'listViewItem',
 		listItemElement = author.id + '_listItems',
 		pagerContatinerElement = author.id + 'pagerContainer';
+		
 	options = $.extend(defaultOptions, options);
-	author.innerHTML = protos.generateHTML('ul', [], '', listItemElement);
-	$(author)[0].innerHTML += protos.generateHTML('div', [], '', pagerContatinerElement);
+	author.innerHTML += protos.generateHTML('ul', [], '', listItemElement);
+	author.innerHTML += protos.generateHTML('div', [], '', pagerContatinerElement);
 	that.dataSource = options.data;
 	
 	// TODO: minification improvement
-	var attachActionEvents = function() {
+	var attachActionEvents = function () {
 		var itemsSelector = hashTag + listItemElement + ' li .';
-		$(itemsSelector + 'itemEdit').each(function(i, element) {
-			$(element).on('click', function() {
+		$(itemsSelector + 'itemEdit').each(function (i, element) {
+			$(element).on('click', function () {
 				var itemElement = $(this).closest('.listViewItem')
 					, uid = itemElement.attr('data-uid')
 					, dataItem = that.dataSource.findItem(uid)
 					, popUp = itemElement.data('popUp');
 
-				if(!popUp) {
-					var editTemplate = protos.template(options.editTemplate).render()
+				if (!popUp) {
+					var editTemplate = protos.template(options.editTemplate, { action: 'update', data: dataItem }).render()
 						, content = protos.generateHTML('form', [], editTemplate, 'editForm');
 						
 					itemElement.protos().popUp(
@@ -39,9 +40,9 @@ widgets.listView = function(options) {
 					popUp = itemElement.data('popUp');
 				}
 				
-				itemElement.on('popUpShowed', function() {
+				itemElement.off('popUpShowed').on('popUpShowed', function () {
 					protos.formFiller($('#editForm'), dataItem);
-					$('#editForm').on('submit', function(e) {
+					$('#editForm').off('submit').on('submit', function (e) {
 						e.preventDefault();
 						
 						$.extend(dataItem, $('#editForm').serializeJson());
@@ -64,6 +65,36 @@ widgets.listView = function(options) {
 				dataItem.deleted = true;
 				that.dataSource.delete();
 			});
+		});
+	
+		$(hashTag + author.id + ' .itemCreate').on('click', function() {
+			var listViewElement = $(this)			
+			, popUp = listViewElement.data('popUp');
+			
+			if(!popUp) {
+				var editTemplate = protos.template(options.editTemplate, { action: 'create' }).render()
+					, content = protos.generateHTML('form', [], editTemplate, 'createForm');
+					
+				listViewElement.protos().popUp(
+					$.extend({
+						content: content,
+						title: 'Add an item'
+					}, options.popUp || {})
+				);
+				popUp = listViewElement.data('popUp');
+			}
+
+			listViewElement.off('popUpShowed').on('popUpShowed', function() {
+				$("#createForm").off('submit').on('submit', function(e) {
+					e.preventDefault();
+					
+					var data = $(this).serializeJson();
+					popUp.hide();
+					that.dataSource.create(data);
+				});
+			});
+			
+			popUp.show();
 		});
 	};
 	

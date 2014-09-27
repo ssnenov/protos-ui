@@ -7,6 +7,7 @@
 	<OptimizationLevel></OptimizationLevel>
 	<MinifyAfterMerge>false</MinifyAfterMerge>
 	<FenceTheScope>
+	'use strict';
 	(function($, document, hashTag) {
 		@codeHere
 	})(jQuery, document, '#');

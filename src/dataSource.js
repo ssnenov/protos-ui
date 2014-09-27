@@ -72,7 +72,7 @@ protos.dataSource = function(options) {
 	, observer = function() {
 		this.savedChanges = false;
 	}	
-	,setProperties = function (items) {
+	, setProperties = function (items) {
 		for(var i=items.length-1; i >= 0; --i)
 		{
 			var item = items[i];
